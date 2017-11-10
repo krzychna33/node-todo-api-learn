@@ -4,22 +4,12 @@ const {ObjectID} = require('mongodb');
 
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
+const {User} = require('./../models/user');
 
-const todos = [{
-  _id: new ObjectID(),
-  text: 'First test todo'
-}, {
-  _id: new ObjectID(),
-  text: 'Second test todo',
-  completed: true,
-  completedAt: 333
-}];
+const {todos, populateTodos, users, populateUsers} = require('./seed/seed');
 
-beforeEach((done) => {
-  Todo.remove({}).then(() => {
-    return Todo.insertMany(todos);
-  }).then(() => done());
-});
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
 describe('POST /todos', () =>{
   it('should create a new todo', (done) =>{
@@ -179,7 +169,94 @@ describe('PATCH /todos/:id', () =>{
         expect(res.body.todo.completedAt).toNotExist();
       })
       .end(done)
+  });
+});
 
+describe('GEt /users/me', ()=>{
+  it('Should get a user if token is correct', (done) =>{
+
+    request(app)
+      .get('/users/me')
+      .set('x-auth', users[0].tokens[0].token)
+      .expect(200)
+      .expect((res) =>{
+        expect(res.body.email).toBe(users[0].email)
+        expect(res.body._id).toBe(users[0]._id.toHexString())
+      })
+      .end(done);
+
+    });
+
+    it('Should get a 401 if token is invalid', (done) =>{
+
+      request(app)
+        .get('/users/me')
+        .expect(401)
+        .expect((res) =>{
+          expect(res.body).toEqual({});
+        })
+        .end(done)
+
+    });
+
+});
+
+
+describe('POST /users', () =>{
+
+  it('Should create a new user', (done)=>{
+
+    var email = 'example@example.com';
+    var password = '123mnb!';
+
+    request(app)
+      .post('/users')
+      .send({email, password})
+      .expect(200)
+      .expect((res)=>{
+        expect(res.headers['x-auth']).toExist();
+        expect(res.body._id).toExist();
+        expect(res.body.email).toBe(email);
+      })
+      .end((err) =>{
+        if(err){
+          return done(err);
+        }
+
+        User.findOne({email}).then((user)=>{
+          expect(user).toExist;
+          expect(user.password).toNotBe(password);
+          done();
+        });
+      });
 
   });
-})
+
+
+  it('Should return validation errors if email is invalid', (done)=>{
+
+    var invalidEmail = 'abc';
+    var password = '123mnb!';
+
+    request(app)
+      .post('/users')
+      .send({invalidEmail, password})
+      .expect(400)
+      .end(done)
+
+  });
+
+
+  it('Should not create user if email inuse', (done)=>{
+
+    var password = '123mnb!';
+    
+    request(app)
+      .post('/users')
+      .send(users[0].email, password)
+      .expect(400)
+      .end(done)
+
+  });
+
+});
