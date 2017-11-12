@@ -131,22 +131,15 @@ app.post('/users/login', (req, res) =>{
     res.status(400).send(e);
   })
 
-  // User.findOne({
-  //   email: body.email,
-  // }).then((user) =>{
-  //   bcrypt.compare(body.password, user.password, (err, accessRes) =>{
-  //     if(accessRes){
-  //       res.send(user)
-  //     } else {
-  //       res.status(403).send('Bad password');
-  //     }
-  //   })
-  // }).catch((e) =>{
-  //   res.status(404).send(e);
-  // });
-
-
 })
+
+app.delete('/users/me/token', authenticate, (req, res) =>{
+  req.user.removeToken(req.token).then(() =>{
+    res.status(200).send();
+  }, () =>{
+    res.status(400).send();
+  })
+});
 
 
 app.get('/users/me', authenticate, (req, res) =>{
