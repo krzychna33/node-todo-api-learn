@@ -156,6 +156,8 @@ app.delete('/users/me/token', authenticate, (req, res) =>{
 
 app.get('/users/me', authenticate, (req, res) =>{
   res.send(req.user);
+  res.header('Access-Control-Allow-Origin', '*').send();
+  res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS,DELETE,PUT').send();
 });
 
 
