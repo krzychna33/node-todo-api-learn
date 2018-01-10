@@ -5,6 +5,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
 const bcrypt = require('bcryptjs');
+var cors = require('cors')
 
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
@@ -16,6 +17,7 @@ var app = express();
 const port = process.env.PORT;
 
 app.use(bodyParser.json());
+app.use(cors());
 
 app.post('/todos', authenticate, (req, res) =>{
   var todo = new Todo({
@@ -156,8 +158,6 @@ app.delete('/users/me/token', authenticate, (req, res) =>{
 
 app.get('/users/me', authenticate, (req, res) =>{
   res.send(req.user);
-  res.header('Access-Control-Allow-Origin', '*').send();
-  res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS,DELETE,PUT').send();
 });
 
 
