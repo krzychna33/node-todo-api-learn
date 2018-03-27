@@ -17,7 +17,10 @@ var app = express();
 const port = process.env.PORT;
 
 app.use(bodyParser.json());
-app.use(cors());
+var corsOptions = {
+  exposedHeaders: ['x-auth']
+}
+app.use(cors(corsOptions));
 
 app.post('/todos', authenticate, (req, res) =>{
   var todo = new Todo({
@@ -139,6 +142,7 @@ app.post('/users/login', (req, res) =>{
 
   User.findByCredentials(body.email, body.password).then((user) =>{
     return user.generateAuthToken().then((token) =>{
+
       res.header('x-auth', token).send(user);
     })
   }).catch((e) =>{
